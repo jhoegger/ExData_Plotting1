@@ -1,29 +1,35 @@
 ## Plot2 ##
 
 
-
+library(utils)
 library(dplyr)
 setwd("C:/Projects/Coursera-DS/4.Explore/Project")
+if (!file.exists("power_data.zip")) { 
+    download.file(url="https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2Fhousehold_power_consumption.zip", 
+        destfile="PowerData.zip") 
+
+}
+
 filename <- "household_power_consumption.txt"
 ##only read in the first 100,000 rows of data
-data <-read.csv(filename, sep = ";", header = TRUE, nrows=100000)
-DT <- tbl_df(data)
-##filter to just 2/1/2007 & 2/2/2007
-DTFeb <-filter(DT, Date == as.Date("2/1/2007", "%m/%d/%Y") | Date == as.Date("2/2/2007", "%m/%d/%Y"))
+data <- read.table(unz("PowerData.zip", filename), header=T, quote="\"", sep=";", na.strings="?", nrows=100000) 
 
-DTFeb[DateTime] <- paste(DTFeb$Date, DTFeb$Time, Sep=" ")
+## Only get Feb1 and Feb2 data
+data <- data[data$Date >= as.Date("2007-02-01") & data$Date <= as.Date("2007-02-02"), ] 
 
-##change the date to by of type Date
-DT$Date <-  as.Date(DT$Date, "%d/%m/%Y")
+## Convert the date to a date object 
+data$Date <- as.Date(data$Date, format="%d/%m/%Y") 
+ 
+## Create a new Date/Time combined column
+data$DateTime <- strptime(paste(data$Date, data$Time), format="%Y-%m-%d %H:%M:%S") 
 
-DTFeb$Global_active_power <- as(DTFeb$Global_active_power, "character")
-##change DTFeb$Global_active_power to be numeric
-DTFeb$Global_active_power <- as(DTFeb$Global_active_power, "numeric")
-##plot Hist
+
+##png(filename = "Plot2.png", width=480, height=480, bg="transparent") 
+ 
+
+## Create plot and save a png file
+
 plotFile <- "C:/Projects/Coursera-DS/4.Explore/Project/plot2.png"
 png(filename = plotFile, width = 480, height = 480, units = "px", pointsize = 12,  bg = "white", res = NA, family = "", restoreConsole = TRUE)
-windows()
-
-hist(DTFeb$Global_active_power, col = "red", main = "Global Active Power", xlab = "Global Active Power (kilowatts)", breaks=15,  xlim = c(0, 6))
-savePlot(plotfile, type = "png", device = dev.cur())
+plot(y=data$Global_active_power, x=data$DateTime, ylab="Global Active Power (killowatts)", xlab="",type="l") 
 dev.off()
